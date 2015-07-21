@@ -159,7 +159,7 @@ function Export-SpaceToPDF {
         Write-Output $out
     }
 }
-function Create-Space {
+function Add-Space {
     #Space addSpace(String token, Space space) - create a new space, passing in name, key and description.
     #Space addPersonalSpace(String token, Space personalSpace, String userName) - add a new space as a personal space.
     [CmdletBinding(DefaultParameterSetName="addSpace")]

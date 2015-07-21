@@ -21,7 +21,7 @@ function Get-ServerInfo {
         return ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.getServerInfo" -Params ($token))
     }
 }
-function ConverTo-StorageFormat {
+function ConvertTo-StorageFormat {
     #String convertWikiToStorageFormat(String token, String markup) - converts wiki markup to the storage format and returns it. (Since 4.0)
     [CmdletBinding()]
     param(
