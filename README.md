@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/lipkau/PsConfluence.png?label=ready&title=Ready)](https://waffle.io/lipkau/PsConfluence)
 # PsConfluence  
 ## Description  
 PowerShell lib to interact with Atlassian's Confluence API  
