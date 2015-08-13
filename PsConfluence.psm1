@@ -26,18 +26,20 @@ Get-ChildItem -Path $PSScriptRoot -recurse | Unblock-File
 
 # Import each file individualy to avoid injections
 #XML-RPC
-$XMLRPCfiles = @('Administration.ps1', `
-                 'Attachement.ps1', `
-                 'Authentication.ps1', `
-                 'Blog.ps1', `
-                 'General.ps1', `
-                 'Labels.ps1', `
-                 'Notifications.ps1', `
-                 'Pages.ps1', `
-                 'Permissions.ps1', `
-                 'Search.ps1', `
-                 'Spaces.ps1', `
-                 'UserManagement.ps1')
+$XMLRPCfiles = @(
+    'Administration.ps1', `
+    'Attachement.ps1', `
+    'Authentication.ps1', `
+    'Blog.ps1', `
+    'General.ps1', `
+    'Labels.ps1', `
+    'Notifications.ps1', `
+    'Pages.ps1', `
+    'Permissions.ps1', `
+    'Search.ps1', `
+    'Spaces.ps1', `
+    'UserManagement.ps1'
+)
 foreach ($file in $XMLRPCfiles)
     {. "$PSScriptRoot\XML-RPC\$file"}
 
