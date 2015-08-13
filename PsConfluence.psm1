@@ -32,8 +32,7 @@ $XMLRPCfiles = @('Administration.ps1', `
                  'General.ps1', `
                  'Labels.ps1', `
                  'Notifications.ps1', `
-                 # 'Pages.ps1', `
-                 'Pages_usingObjects.ps1', `
+                 'Pages.ps1', `
                  'Permissions.ps1', `
                  'Search.ps1', `
                  'Spaces.ps1', `
