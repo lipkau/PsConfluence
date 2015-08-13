@@ -89,7 +89,7 @@ function Get-ConfluenceClusterInformation {
                  1.0.0 - OL - Replaced hashtables with Objects
 
     .INPUTS
-        
+
 
     .OUTPUTS
         Confluence.ClusterInformation
@@ -157,10 +157,10 @@ function Get-ConfluenceClusterNodeStatuses {
         
 
     .EXAMPLE
-        Get-ConfluenceClusterInformation -apiURi "http://example.com" -token "000000"
+        Get-ConfluenceClusterNodeStatuses -apiURi "http://example.com" -token "000000"
         -----------
         Description
-        Fetch the Cluster Information of the Confluence Instance
+        Returns a Vector of NodeStatus objects containing information about each node in the cluster
 
     .LINK
         Atlassians's Docs:
@@ -168,9 +168,6 @@ function Get-ConfluenceClusterNodeStatuses {
 
     #>
     [CmdletBinding(
-    )]
-    [OutputType(
-        [Confluence.ClusterInformation]
     )]
     param(
         # The URi of the API interface.
@@ -214,16 +211,15 @@ function Test-ConfluencePluginEnabled {
 
     .INPUTS
         string
-        string[]
 
     .OUTPUTS
         bool
 
     .EXAMPLE
-        Get-ConfluenceClusterInformation -apiURi "http://example.com" -token "000000"
+        Test-ConfluencePluginEnabled -apiURi "http://example.com" -token "000000" -Plugin "pluginName"
         -----------
         Description
-        Fetch the Cluster Information of the Confluence Instance
+        Return if the Plugin "pluginName" is enabled
 
     .LINK
         Atlassians's Docs:
