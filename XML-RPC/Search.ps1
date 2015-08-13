@@ -81,7 +81,7 @@ function Search-ConfluenceSite {
             Position=4,
             ParameterSetName="searchByParameter"
         )]
-        $maxResults = 50,
+        [int16]$maxResults = 50,
 
         # Parameters for Limiting Search Results:
         #        key         |description                           |values                |default
@@ -121,7 +121,7 @@ function Search-ConfluenceSite {
         switch ($PsCmdlet.ParameterSetName) {
             "search" {
                 Write-Verbose "$($MyInvocation.MyCommand.Name):: Searching without filter for `"$query`""
-                $response = ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.search" -Params ($token,$query,($maxResults)))
+                $response = ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.search" -Params ($token,$query,$maxResults))
                 if ($response)
                 {
                     foreach ($SearchResult in $response)
@@ -133,7 +133,7 @@ function Search-ConfluenceSite {
             }
             "searchByParameter" {
                 Write-Verbose "$($MyInvocation.MyCommand.Name):: Searching with filters for `"$query`""
-                $response = ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.search" -Params ($token,$query,$Filter,($maxResults)))
+                $response = ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.search" -Params ($token,$query,$Filter,$maxResults))
                 if ($response)
                 {
                     foreach ($SearchResult in $response)
