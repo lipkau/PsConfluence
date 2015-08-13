@@ -13,6 +13,7 @@
 
     .Documentation
         https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-methods
+        https://developer.atlassian.com/confdev/confluence-rest-api/remote-api-specification-for-pdf-export
         http://www.k15t.com/display/SUPPORT/Changing+all+pages+in+a+space+to+unversioned+pages
 
 #>
