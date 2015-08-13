@@ -258,7 +258,7 @@ function Test-ConfluencePluginEnabled {
             ValueFromPipelineByPropertyName=$true
         )]
         [Alias("Name")]
-        [string$Plugin
+        [string]$Plugin
     )
 
     Begin
