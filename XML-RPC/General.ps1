@@ -20,8 +20,14 @@ function Invoke-ConfluenceCall {
         [Object]$Params
     )
 
+    Begin {
+        $ConfluenceObjects = @('ServerInfo', 'SpaceSummary', 'Space', 'PageSummary', 'Page', 'PageUpdateOptions', 'PageHistorySummary', 'BlogEntrySummary', 'BlogEntry', 'SearchResult', 'Attachment', 'Comment', 'User', 'ContentPermission', 'ContentPermissionSet', 'SpacePermissionSet', 'Label', 'UserInformation', 'ClusterInformation', 'NodeStatus', 'ContentSummaries', 'ContentSummary')
+    }
+
     Process {
-        $r = Send-XmlRpcRequest -Url $apiURi -MethodName $MethodName -Params $Params
+        $global:t = $params
+        $r = Send-XmlRpcRequest -Url $apiURi -MethodName $MethodName -Params $Params -CustomTypes $ConfluenceObjects
+        $global:s = $r
         if ($r.methodResponse.fault) {
             $re = $r.methodResponse.fault.value.struct.member
             $msg = $re.value[0]
