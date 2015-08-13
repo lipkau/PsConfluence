@@ -1,6 +1,6 @@
 ﻿#Requires -Version 3.0
 <#  Spaces #>
-function Get-Spaces {
+function Get-ConfluenceSpaces {
     #Vector<SpaceSummary> getSpaces(String token) - returns all the summaries that the current user can see.
     #Space getSpace(String token, String spaceKey) - returns a single Space. If the spaceKey does not exist: earlier versions of Confluence will throw an Exception. Later versions (3.0+) will return a null object.
     #String getSpaceStatus(String token, String spaceKey) - returns the status of a space, either CURRENT or ARCHIVED.
@@ -51,28 +51,28 @@ function Get-Spaces {
     Process {
         switch ($PsCmdlet.ParameterSetName) {
             "getSpaces" {
-                return ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.getSpaces" -Params ($token))
+                return ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getSpaces" -Params ($token))
             }
             "getSpace" {
                 if ($status) {
-                    return ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.getSpaceStatus" -Params ($token,$SpaceKey))
+                    return ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getSpaceStatus" -Params ($token,$SpaceKey))
                 } else {
-                    return ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.getSpace" -Params ($token,$SpaceKey))
+                    return ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getSpace" -Params ($token,$SpaceKey))
                 }
                 break
             }
             "getSpacesWithLabel" {
                 if ($ContainingContent) {
-                    return ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.getSpacesContainingContentWithLabel" -Params ($token,$Label))
+                    return ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getSpacesContainingContentWithLabel" -Params ($token,$Label))
                 } Write-Output {
-                    return ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.getSpacesWithLabel" -Params ($token,$Label))
+                    return ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getSpacesWithLabel" -Params ($token,$Label))
                 }
                 break
             }
         }
     }
 }
-function Export-Space {
+function Export-ConfluenceSpace {
     #String exportSpace(String token, String spaceKey, String exportType) - exports a space and returns a String holding the URL for the download. The export type argument indicates whether or not to export in XML or HTML format - use "TYPE_XML" or "TYPE_HTML" respectively. (Note: In Confluence 3.0, the remote API specification for PDF exports changed. You can no longer use this 'exportSpace' method to export a space to PDF. Please refer to Remote API Specification for PDF Export for current remote API details on this feature.)
     #String exportSpace(String token, String spaceKey, String exportType, boolean exportAll) - exports a space and returns a String holding the URL for the download. In the version 2 API you can set exportAll to true to export the entire contents of the space.
     [CmdletBinding()]
@@ -115,14 +115,14 @@ function Export-Space {
     }
 
     Process {
-        $out += ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.exportSpace" -Params ($token,$SpaceKey, $exportType, $exportAll))
+        $out += ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.exportSpace" -Params ($token,$SpaceKey, $exportType, $exportAll))
     }
 
     End {
         Write-Output $out
     }
 }
-function Export-SpaceToPDF {
+function Export-ConfluenceSpaceToPDF {
     #public String exportSpace(String token, String spaceKey) - exports the entire space as a PDF. Returns a url to download the exported PDF. Depending on how you have Confluence set up, this URL may require you to authenticate with Confluence. Note that this will be normal Confluence authentication, not the token based authentication that the web service uses.
     [CmdletBinding()]
     param(
@@ -152,14 +152,14 @@ function Export-SpaceToPDF {
     }
 
     Process {
-        $out += ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.pdfexport" -Params ($token,$SpaceKey))
+        $out += ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.pdfexport" -Params ($token,$SpaceKey))
     }
 
     End {
         Write-Output $out
     }
 }
-function Add-Space {
+function Add-ConfluenceSpace {
     #Space addSpace(String token, Space space) - create a new space, passing in name, key and description.
     #Space addPersonalSpace(String token, Space personalSpace, String userName) - add a new space as a personal space.
     [CmdletBinding(DefaultParameterSetName="addSpace")]
@@ -203,15 +203,15 @@ function Add-Space {
     Process {
         switch ($PsCmdlet.ParameterSetName) {
             "addSpace" {
-                return ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.addSpace" -Params ($token,$SpaceKey))
+                return ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.addSpace" -Params ($token,$SpaceKey))
             }
             "addPersonalSpace" {
-                return ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.addPersonalSpace" -Params ($token,$personalSpace, $userName))
+                return ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.addPersonalSpace" -Params ($token,$personalSpace, $userName))
             }
         }
     }
 }
-function Remove-Space {
+function Remove-ConfluenceSpace {
     #Boolean removeSpace(String token, String spaceKey) - remove a space completely.
     [CmdletBinding()]
     param(
@@ -238,11 +238,11 @@ function Remove-Space {
 
     Process {
         if ($PSCmdlet.ShouldProcess($SpaceKey)) {
-            return ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.removeSpace" -Params ($token,$SpaceKey))
+            return ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.removeSpace" -Params ($token,$SpaceKey))
         }
     }
 }
-function ConvertTo-PersonalSpace {
+function ConvertTo-ConfluencePersonalSpace {
     #boolean convertToPersonalSpace(String token, String userName, String spaceKey, String newSpaceName, boolean updateLinks) - convert an existing space to a personal space.
     [CmdletBinding()]
     param(
@@ -284,11 +284,11 @@ function ConvertTo-PersonalSpace {
 
     Process {
         if ($PSCmdlet.ShouldProcess($SpaceKey)) {
-            return ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.convertToPersonalSpace" -Params ($token,$userName, $spaceKey,$newSpaceName,$updateLinks))
+            return ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.convertToPersonalSpace" -Params ($token,$userName, $spaceKey,$newSpaceName,$updateLinks))
         }
     }
 }
-function Set-Space {
+function Set-ConfluenceSpace {
     #Space storeSpace(String token, Space space) - create a new space if passing in a name, key and description or update the properties of an existing space. Only name, homepage or space group can be changed.
     ##Boolean setSpaceStatus(String token, String spaceKey, String status) - set a new status for a space. Valid values for status are "CURRENT" and "ARCHIVED".
     [CmdletBinding(DefaultParameterSetName="storeSpace")]
@@ -332,18 +332,18 @@ function Set-Space {
     Process {
         switch ($PsCmdlet.ParameterSetName) {
             "storeSpace" {
-                return ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.storeSpace" -Params ($token,$Space))
+                return ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.storeSpace" -Params ($token,$Space))
             }
             "setSpaceStatus" {
-                return ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.setSpaceStatus" -Params ($token,$SpaceKey,$status))
+                return ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.setSpaceStatus" -Params ($token,$SpaceKey,$status))
             }
         }
     }
 }
-<#function Import-ConfluenceSpace {
+<#function Import-ConfluenceConfluenceSpace {
     #boolean importSpace(String token, byte[] zippedImportData) - import a space into Confluence. Note that this uses a lot of memory - about 4 times the size of the upload. The data provided should be a zipped XML backup, the same as exported by Confluence.
 }#>
-function Get-TrashContent {
+function Get-ConfluenceTrashContent {
     #ContentSummaries getTrashContents(String token, String spaceKey, int offset, int count) - get the contents of the trash for the given space, starting at 'offset' and returning at most 'count' items.
     [CmdletBinding()]
     param(
@@ -368,11 +368,11 @@ function Get-TrashContent {
 
     Process {
         if ($PSCmdlet.ShouldProcess($SpaceKey)) {
-            return ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.storeSpace" -Params ($token,$Space))
+            return ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.storeSpace" -Params ($token,$Space))
         }
     }
 }
-function Remove-TrashItem {
+function Remove-ConfluenceTrashItem {
     #boolean purgeFromTrash(String token, String spaceKey, long contentId) - remove some content from the trash in the given space, deleting it permanently.
     #boolean emptyTrash(String token, String spaceKey) - remove all content from the trash in the given space, deleting them permanently.
     [CmdletBinding(DefaultParameterSetName="purgeFromTrash")]
@@ -422,14 +422,14 @@ function Remove-TrashItem {
         switch ($PsCmdlet.ParameterSetName) {
             "purgeFromTrash" {
                 if ($PSCmdlet.ShouldProcess($SpaceKey)) {
-                    return ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.storeSpace" -Params ($token,$Space))
+                    return ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.storeSpace" -Params ($token,$Space))
                 }
                 break
             }
             "emptyTrash" {
                 if ($RemoveAll) {
                     if ($PSCmdlet.ShouldProcess($SpaceKey)) {
-                        return ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.storeSpace" -Params ($token,$Space))
+                        return ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.storeSpace" -Params ($token,$Space))
                     }
                 }
                 break

@@ -1,6 +1,6 @@
 ﻿#Requires -Version 3.0
 <#  Pages #>
-function Get-Page {
+function Get-ConfluencePage {
     #Vector<PageSummary> getPages(String token, String spaceKey) - returns all the summaries in the space. Doesn't include pages which are in the Trash. Equivalent to calling Space.getCurrentPages().
     #Page getPage(String token, Long pageId) - returns a single Page
     #Page getPage(String token, String spaceKey, String pageTitle) - returns a single Page
@@ -35,10 +35,10 @@ function Get-Page {
             Mandatory=$true,
             ParameterSetName="getPageById"
         )]
-        [Parameter(
-            Mandatory=$true,
-            ParameterSetName="getPageHistory"
-        )]
+        #[Parameter(
+        #    Mandatory=$true,
+        #    ParameterSetName="getPageHistory"
+        #)]
         [Alias("id")]
         [string[]]$PageId,
 
@@ -46,7 +46,15 @@ function Get-Page {
             Mandatory=$true,
             ParameterSetName="getPageByTitle"
         )]
-        [string[]]$PageTitle
+        [string[]]$PageTitle,
+
+        [Parameter(
+            Mandatory=$true,
+            ParameterSetName="getPageByPage",
+            ValueFromPipeline=$true
+        )]
+        [ValidateScript({$_.id})]
+        $Page
     )
 
     Begin {
@@ -56,18 +64,27 @@ function Get-Page {
     Process {
         switch ($PsCmdlet.ParameterSetName) {
             "getPagesFromSpace" {
-                $out += ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.getPages" -Params ($token,$spacekey))
+                $out += ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getPages" -Params ($token,$spacekey))
+                # foreach ($entry in $response)
+                # {
+                #     $out += [Confluence.PageSummary]$entry
+                # }
                 break
             }
             "getPageById" {
                 foreach ($id in $PageId) {
-                    $out += ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.getPage" -Params ($token,([string]$id)))
+                    $out += ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getPage" -Params ($token,([string]$id)))
                 }
                 break
             }
+            "getPageByPage" {
+                $out += ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getPage" -Params ($token,([string]$page.id)))
+                break
+            }
+
             "getPageByTitle" {
                 foreach ($t in $PageTitle) {
-                    $out += ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.getPage" -Params ($token,$spacekey,$t))
+                    $out += ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getPage" -Params ($token,$spacekey,$t))
                 }
                 break
             }
@@ -78,7 +95,7 @@ function Get-Page {
         Write-Output $out
     }
 }
-function Set-Page {
+function Set-ConfluencePage {
     #Page storePage(String token, Page  page) - adds or updates a page. For adding, the Page given as an argument should have space, title and content fields at a minimum. For updating, the Page given should have id, space, title, content and version fields at a minimum. The parentId field is always optional. All other fields will be ignored. The content is in storage format. Note: the return value can be null, if an error that did not throw an exception occurred.  Operates exactly like updatePage() if the page already exists.
     #Page  updatePage(String token, Page  page, PageUpdateOptions pageUpdateOptions) - updates a page. The Page given should have id, space, title, content and version fields at a minimum. The parentId field is always optional. All other fields will be ignored. Note: the return value can be null, if an error that did not throw an exception occurred.
     [CmdletBinding()]
@@ -114,11 +131,11 @@ function Set-Page {
 
     Process {
         if ($Page.id) {
-            if ($r = Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.updatePage" -Params ($token,$page,$updateOptions)) {
+            if ($r = Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.updatePage" -Params ($token,$page,$updateOptions)) {
                 $o += ConvertFrom-Xml $r
             }
         } else {
-            if ($r = Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.storePage" -Params ($token,$page)) {
+            if ($r = Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.storePage" -Params ($token,$page)) {
                 $o += ConvertFrom-Xml $r
             }
         }
@@ -128,7 +145,7 @@ function Set-Page {
         $o
     }
 }
-function Remove-Page {
+function Remove-ConfluencePage {
     #void removePage(String token, String pageId) - removes a page
     #void removePageVersionById(String token, String historicalPageId)  - removes a historical version of a page identified by that versions id.
     #void removePageVersionByVersion(String token, String pageId, int version) - removes a historical version of a page identified by the current page id and the version number you want to remove (with 1 being the first version)
@@ -200,14 +217,14 @@ function Remove-Page {
             }
             "VersionById" {
                 if ($PSCmdlet.ShouldProcess($source)) {
-                    if ($global:r = Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.removePageVersionById" -Params ($token,[string]$historicalPageId)) {
+                    if ($global:r = Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.removePageVersionById" -Params ($token,[string]$historicalPageId)) {
                         $o += ConvertFrom-Xml $r
                     }
                 }
             }
             "VersionByVersion" {
                 if ($PSCmdlet.ShouldProcess($source)) {
-                    if ($global:r = Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.removePageVersionByVersion" -Params ($token,([string]$PageId),$version)) {
+                    if ($global:r = Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.removePageVersionByVersion" -Params ($token,([string]$PageId),$version)) {
                         $o += ConvertFrom-Xml $r
                     }
                 }
@@ -216,7 +233,7 @@ function Remove-Page {
 
         foreach ($id in $source) {
             if ($PSCmdlet.ShouldProcess($source)) {
-                if ($global:r = Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.removePage" -Params ($token,([string]$id))) {
+                if ($global:r = Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.removePage" -Params ($token,([string]$id))) {
                     $o += ConvertFrom-Xml $r
                 }
             }
@@ -227,7 +244,7 @@ function Remove-Page {
         $o
     }
 }
-function Move-Page {
+function Move-ConfluencePage {
     #void movePage(String token, String sourcePageId, String targetPageId, String position)- moves a page's position in the hierarchy.
         #sourcePageId - the id of the page to be moved.
         #targetPageId - the id of the page that is relative to the sourcePageId page being moved.
@@ -276,7 +293,7 @@ function Move-Page {
         )]
         [ValidateSet("above","below","append")]
         [string]$position,
-        
+
         [Parameter(
             Position=3,
             Mandatory=$true,
@@ -294,7 +311,7 @@ function Move-Page {
         switch ($PsCmdlet.ParameterSetName) {
             "movePage" {
                 if ($PSCmdlet.ShouldProcess($pageid)) {
-                    if ($r = Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.movePage" -Params ($token,([string]$SourcePageId),([string]$TargetPageId),$position)) {
+                    if ($r = Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.movePage" -Params ($token,([string]$SourcePageId),([string]$TargetPageId),$position)) {
                         return ConvertFrom-Xml $r
                     }
                 }
@@ -302,7 +319,7 @@ function Move-Page {
             }
             "movePageToTop" {
                 if ($PSCmdlet.ShouldProcess($pageid)) {
-                    if ($r = Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.movePageToTopLevel" -Params (([string]$SourcePageId),$SpaceKey)) {
+                    if ($r = Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.movePageToTopLevel" -Params (([string]$SourcePageId),$SpaceKey)) {
                         return ConvertFrom-Xml $r
                     }
                 }
@@ -315,7 +332,7 @@ function Move-Page {
         $o
     }
 }
-function Get-ChildPage {
+function Get-ConfluenceChildPage {
     #Vector<PageSummary> getChildren(String token, String pageId) - returns all the direct children of this page.
     #Vector<PageSummary> getDescendents(String token, String pageId) - returns all the descendants of this page (children, children's children etc).
     [CmdletBinding()]
@@ -344,13 +361,13 @@ function Get-ChildPage {
 
     Process {
         if ($Recurse) {
-            return ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.getDescendents" -Params ($token,$PageId))
+            return ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getDescendents" -Params ($token,$PageId))
         } else {
-            return ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.getChildren" -Params ($token,$PageId))
+            return ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getChildren" -Params ($token,$PageId))
         }
     }
 }
-function Get-PageHistory {
+function Get-ConfluencePageHistory {
     #Vector<PageHistorySummary> getPageHistory(String token, String pageId) - returns all the PageHistorySummaries - useful for looking up the previous versions of a page, and who changed them.
     [CmdletBinding()]
     param(
@@ -374,10 +391,10 @@ function Get-PageHistory {
     )
 
     Process{
-        return ConvertFrom-Xml (Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.getPageHistory" -Params ($token,$PageId))
+        return ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getPageHistory" -Params ($token,$PageId))
     }
 }
-function Get-Permissions {
+function Get-ConfluencePermissions {
     #Vector<ContentPermissionSet> getContentPermissionSets(String token, String contentId) - returns all the page level permissions for this page as ContentPermissionSets
     #TODO: Hashtable getContentPermissionSet(String token, String contentId, String permissionType) - returns the set of permissions on a page as a map of type to a list of ContentPermission, for the type of permission which is either 'View' or 'Edit'
     #TODO: Vector<ContentPermission> getPagePermissions(String token, String pageId) - Returns a Vector of permissions representing the permissions set on the given page.
@@ -418,7 +435,7 @@ function Get-Permissions {
     Process {
         foreach ($id in $PageId) {
             foreach ($pt in $permissionType) {
-                if ($r = Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.getContentPermissionSet" -Params ($token,([string]$id),$pt )) {
+                if ($r = Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getContentPermissionSet" -Params ($token,([string]$id),$pt )) {
                     $o += ConvertFrom-Xml $r
                 }
             }
@@ -429,7 +446,7 @@ function Get-Permissions {
         $o
     }
 }
-function Set-Permissions {
+function Set-ConfluencePermissions {
     #boolean setContentPermissions(String token, String contentId, String permissionType, Vector permissions) - sets the page-level permissions for a particular permission type (either 'View' or 'Edit') to the provided vector of ContentPermissions. If an empty list of permissions are passed, all page permissions for the given type are removed. If the existing list of permissions are passed, this method does nothing.
     [CmdletBinding(SupportsShouldProcess=$True)]
     param(
@@ -470,14 +487,14 @@ function Set-Permissions {
     Process {
         foreach ($id in $PageId) {
             if ($PSCmdlet.ShouldProcess($id)) {
-                if ($r = Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.setContentPermissions" -Params ($token,([string]$id),$PermissionType,($Permissions))) {
+                if ($r = Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.setContentPermissions" -Params ($token,([string]$id),$PermissionType,($Permissions))) {
                     return ConvertFrom-Xml $r
                 }
             }
         }
     }
 }
-function Get-Attachment {
+function Get-ConfluenceAttachment {
     #Attachment getAttachment(String token, String pageId, String fileName, String versionNumber) - get information about an attachment.
     #Vector<Attachment> getAttachments(String token, String pageId) - returns all the Attachments for this page (useful to point users to download them with the full file download URL returned).
     #byte[] getAttachmentData(String token, String pageId, String fileName, String versionNumber) - get the contents of an attachment.
@@ -535,18 +552,18 @@ function Get-Attachment {
             "getAttachment" {
                 if ($data)
                 {
-                    if ($r = Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.getAttachmentData" -Params ($token,([string]$pageid),$filename,([string]$version))) {
+                    if ($r = Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getAttachmentData" -Params ($token,([string]$pageid),$filename,([string]$version))) {
                         $o += ConvertFrom-Xml $r
                     }
                 } else {
-                    if ($r = Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.getAttachment" -Params ($token,([string]$pageid),$filename,([string]$version))) {
+                    if ($r = Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getAttachment" -Params ($token,([string]$pageid),$filename,([string]$version))) {
                         $o += ConvertFrom-Xml $r
                     }
                 }
                 break
             }
             default {
-                if ($r = Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.getAttachments" -Params ($token,([string]$pageid))) {
+                if ($r = Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getAttachments" -Params ($token,([string]$pageid))) {
                     $o += ConvertFrom-Xml $r
                 }
                 break
@@ -558,13 +575,13 @@ function Get-Attachment {
         $o
     }
 }
-<#function Get-Ancestors {
+<#function Get-ConfluenceAncestors {
     #Vector<PageSummary> getAncestors(String token, String pageId) - returns all the ancestors of this page (parent, parent's parent etc).
 }#>
-<#function Get-Children {
+<#function Get-ConfluenceChildren {
     #Vector<PageSummary> getChildren(String token, String pageId) - returns all the direct children of this page.
 }#>
-function Get-Comment {
+function Get-ConfluenceComment {
     #Vector<Comment> getComments(String token, String pageId) - returns all the comments for this page.
     [CmdletBinding()]
     param(
@@ -595,7 +612,7 @@ function Get-Comment {
 
     Process {
         foreach ($id in $pageId) {
-            if ($r = Perform-ConfluenceCall -Url $apiURi -MethodName "confluence2.getComments" -Params ($token,([string]$id))) {
+            if ($r = Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getComments" -Params ($token,([string]$id))) {
                 $o += ConvertFrom-Xml $r
             }
         }
@@ -605,16 +622,16 @@ function Get-Comment {
         $o
     }
 }
-<#function Add-Comment {
+<#function Add-ConfluenceComment {
     #Comment addComment(String token, Comment comment) - adds a comment to the page.
 }#>
-<#function Set-Comment {
+<#function Set-ConfluenceComment {
     #Comment editComment(String token, Comment comment) - Updates an existing comment on the page.
 }#>
-<#function Remove-Comment {
+<#function Remove-ConfluenceComment {
     #boolean removeComment(String token, String commentId) - removes a comment from the page.
 }#>
-<#function Render-Content {
+<#function Render-ConfluenceContent {
     #String renderContent(String token, String spaceKey, String pageId, String content) - returns the HTML rendered content for this page. The behaviour depends on which arguments are passed:
         #If only pageId is passed then the current content of the page will be rendered.
         #If a pageId and content are passed then the content will be rendered as if it were the body of that page.
