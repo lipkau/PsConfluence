@@ -4,58 +4,58 @@ function Get-ConfluencePage {
     <#
     .SYNOPSIS
         Retrieve Page from Confluence
-    
+
     .DESCRIPTION
         Retrieve a single Page or a set of Pages from Confluence
-    
+
     .NOTES
         AUTHOR : Oliver Lipkau <oliver@lipkau.net>
         VERSION: 0.0.1 - OL - Initial Code
                  1.0.0 - OL - Replaced hashtables with Objects
-    
+
     .INPUTS
         string
         Confluence.PageSummary
-    
+
     .OUTPUTS
         Confluence.Page
         Confluence.Page[]
         Confluence.PageSummary[]
-    
+
     .EXAMPLE
         Get-ConfluencePage -apiURi "http://example.com" -token "000000" -spacekey "ABC"
         -----------
         Description
         Fetch all pages as Confluence.PageSummary from Space "ABC"
 
-    
+
     .EXAMPLE
         $param = @{apiURi = "http://example.com"; token = "000000"}
         Get-ConfluencePage @param -spacekey "ABC" | Get-ConfluencePage @param
         -----------
         Description
         Fetch all pages as Confluence.PageSummary and exapand to Confluence.Page
-        
+
     .EXAMPLE
         $param = @{apiURi = "http://example.com"; token = "000000"}
         Get-ConfluencePage @param -pageId "12345678"
         -----------
         Description
         Fetch a specific Page
-        
+
     .EXAMPLE
         $param = @{apiURi = "http://example.com"; token = "000000"}
         Get-ConfluencePage @param -spacekey "ABC" -pageTitle "Page Title"
         -----------
         Description
         Fetch a specific Page by Title
-        
+
     .LINK
         Atlassians's Docs:
             Vector<PageSummary> getPages(String token, String spaceKey) - returns all the summaries in the space. Doesn't include pages which are in the Trash. Equivalent to calling Space.getCurrentPages().
             Page getPage(String token, Long pageId) - returns a single Page
             Page getPage(String token, String spaceKey, String pageTitle) - returns a single Page
-    
+
     #>
     [CmdletBinding(
         DefaultParameterSetName="getPagesFromSpace"
@@ -159,23 +159,23 @@ function Set-ConfluencePage {
     <#
     .SYNOPSIS
         Set Page to Confluence
-    
+
     .DESCRIPTION
         Set a Page to Confluence
-    
+
     .NOTES
         AUTHOR : Oliver Lipkau <oliver@lipkau.net>
         VERSION: 0.0.1 - OL - Initial Code
                  1.0.0 - OL - Replaced hashtables with Objects
-    
+
     .INPUTS
         string
         Confluence.Page
         Confluence.PageUpdateOptions
-    
+
     .OUTPUTS
         Confluence.Page
-    
+
     .EXAMPLE
         $NewPage = New-Object Confluence.Page
         $NewPage.title ="My new Title"
@@ -186,7 +186,7 @@ function Set-ConfluencePage {
         Description
         Create a new Page
 
-    
+
     .EXAMPLE
         $param = @{apiURi = "http://example.com"; token = "000000"}
         $Page = Get-ConfluencePage @param -spacekey "ABC" -pagetitle "My new Title"
@@ -198,12 +198,12 @@ function Set-ConfluencePage {
         -----------
         Description
         Fetch a Page, updating it and leave a comment for the update
-    
+
     .LINK
         Atlassians's Docs:
             Page storePage(String token, Page  page) - adds or updates a page. For adding, the Page given as an argument should have space, title and content fields at a minimum. For updating, the Page given should have id, space, title, content and version fields at a minimum. The parentId field is always optional. All other fields will be ignored. The content is in storage format. Note: the return value can be null, if an error that did not throw an exception occurred.  Operates exactly like updatePage() if the page already exists.
             Page updatePage(String token, Page  page, PageUpdateOptions pageUpdateOptions) - updates a page. The Page given should have id, space, title, content and version fields at a minimum. The parentId field is always optional. All other fields will be ignored. Note: the return value can be null, if an error that did not throw an exception occurred.
-    
+
     #>
     [CmdletBinding(
         SupportsShouldProcess=$true,
@@ -244,7 +244,13 @@ function Set-ConfluencePage {
     )
 
     Begin
-        { Write-Verbose "$($MyInvocation.MyCommand.Name):: Function started" }
+    {
+        Write-Verbose "$($MyInvocation.MyCommand.Name):: Function started"
+        if (!$updateOptions)
+        {
+            $updateOptions = New-Object Confluence.PageUpdateOptions
+        }
+    }
 
     Process {
         if ($Page.id) {
@@ -271,31 +277,31 @@ function Remove-ConfluencePage {
     <#
     .SYNOPSIS
         Remove Page from Confluence
-    
+
     .DESCRIPTION
         Remove a Page from Confluence
-    
+
     .NOTES
         AUTHOR : Oliver Lipkau <oliver@lipkau.net>
         VERSION: 0.0.1 - OL - Initial Code
                  1.0.0 - OL - Replaced hashtables with Objects
-    
+
     .INPUTS
         string
         int
         Confluence.Page
         Confluence.PageSummary
-    
+
     .OUTPUTS
-        
-    
+
+
     .EXAMPLE
         Remove-ConfluencePage -apiURi "http://example.com" -token "000000" -pageId 12345678
         -----------
         Description
         Remove a specific Page by it's ID
 
-    
+
     .EXAMPLE
         $param = @{apiURi = "http://example.com"; token = "000000"}
         $Page = Get-ConfluencePage @param -spacekey "ABC" -pagetitle "My new Title"
@@ -310,13 +316,13 @@ function Remove-ConfluencePage {
         -----------
         Description
         Fetch all Pages in a Space and remove them
-    
+
     .LINK
         Atlassians's Docs:
             void removePage(String token, String pageId) - removes a page
             void removePageVersionById(String token, String historicalPageId)  - removes a historical version of a page identified by that versions id.
             void removePageVersionByVersion(String token, String pageId, int version) - removes a historical version of a page identified by the current page id and the version number you want to remove (with 1 being the first version)
-    
+
     #>
     [CmdletBinding(
         DefaultParameterSetName="PageByPageId",
@@ -420,21 +426,21 @@ function Move-ConfluencePage {
     <#
     .SYNOPSIS
         Move a Page in Confluence
-    
+
     .DESCRIPTION
         Move a Page to a new Parent or Space
-    
+
     .NOTES
         AUTHOR : Oliver Lipkau <oliver@lipkau.net>
         VERSION: 0.0.1 - OL - Initial Code
                  1.0.0 - OL - Replaced hashtables with Objects
-    
+
     .INPUTS
         string
-    
+
     .OUTPUTS
-        
-    
+
+
     .EXAMPLE
         $NewPage = New-Object Confluence.Page
         $NewPage.title ="My new Title"
@@ -446,7 +452,7 @@ function Move-ConfluencePage {
         Description
         Create a new Page and move it to Top Level in Space "DEF"
 
-    
+
     .EXAMPLE
         $param = @{apiURi = "http://example.com"; token = "000000"}
         $sourcePage = Get-ConfluencePage @param -spacekey "ABC" -pagetitle "Page Title"
@@ -464,7 +470,7 @@ function Move-ConfluencePage {
         -----------
         Description
         Fetch source and target Pages and move source page so it is a sibling placed above the target page
-    
+
     .LINK
         Atlassians's Docs:
             void movePageToTopLevel(String pageId, String targetSpaceKey) - moves a page to the top level of the target space. This corresponds to PageManager - movePageToTopLevel.
@@ -477,7 +483,7 @@ function Move-ConfluencePage {
             above   |   source and target become/remain sibling pages and the source is moved above the target in the page tree.
             below   |   source and target become/remain sibling pages and the source is moved below the target in the page tree.
             append  |   source becomes a child of the target
-    
+
     #>
     [CmdletBinding(
         DefaultParameterSetName="movePage",
@@ -564,40 +570,40 @@ function Get-ConfluenceChildPage {
     <#
     .SYNOPSIS
         Get all child pages of a Confluence Page
-    
+
     .DESCRIPTION
         Get all child pages of a Confluence Page
-    
+
     .NOTES
         AUTHOR : Oliver Lipkau <oliver@lipkau.net>
         VERSION: 0.0.1 - OL - Initial Code
                  1.0.0 - OL - Replaced hashtables with Objects
-    
+
     .INPUTS
         string
-    
+
     .OUTPUTS
         Confluence.PageSummary[]
-    
+
     .EXAMPLE
         Get-ConfluenceChildPage -apiURi "http://example.com" -token "000000" -pageId 12345678
         -----------
         Description
         Fetch all children of a specific page
 
-    
+
     .EXAMPLE
         $param = @{apiURi = "http://example.com"; token = "000000"}
         Get-ConfluenceChildPage @param -pageid 12345678 -recurse
         -----------
         Description
         Fetch recursively all children of a specific page
-    
+
     .LINK
         Atlassians's Docs:
             Vector<PageSummary> getChildren(String token, String pageId) - returns all the direct children of this page.
             Vector<PageSummary> getDescendents(String token, String pageId) - returns all the descendants of this page (children, children's children etc).
-    
+
     #>
     [CmdletBinding(
     )]
@@ -666,39 +672,39 @@ function Get-ConfluencePageHistory {
     <#
     .SYNOPSIS
         Get the history of a Confluence Page
-    
+
     .DESCRIPTION
         Get the history of a Confluence Page
-    
+
     .NOTES
         AUTHOR : Oliver Lipkau <oliver@lipkau.net>
         VERSION: 0.0.1 - OL - Initial Code
                  1.0.0 - OL - Replaced hashtables with Objects
-    
+
     .INPUTS
         string
-    
+
     .OUTPUTS
         Confluence.PageHistorySummary[]
-    
+
     .EXAMPLE
         Get-ConfluencePageHistory -apiURi "http://example.com" -token "000000" -pageId 12345678
         -----------
         Description
         Fetch the history of a specific page
 
-    
+
     .EXAMPLE
         $param = @{apiURi = "http://example.com"; token = "000000"}
         Get-ConfluencePageHistory @param -pageid 12345678
         -----------
         Description
         Fetch the history of a specific page
-    
+
     .LINK
         Atlassians's Docs:
             Vector<PageHistorySummary> getPageHistory(String token, String pageId) - returns all the PageHistorySummaries - useful for looking up the previous versions of a page, and who changed them.
-    
+
     #>
     [CmdletBinding(
     )]
@@ -751,31 +757,31 @@ function Get-ConfluencePermissions {
     <#
     .SYNOPSIS
         Get permissions/restrictions of a Confluence Page
-    
+
     .DESCRIPTION
         Get permissions/restrictions of a Confluence Page
-    
+
     .NOTES
         AUTHOR : Oliver Lipkau <oliver@lipkau.net>
         VERSION: 0.0.1 - OL - Initial Code
                  1.0.0 - OL - Replaced hashtables with Objects
-    
+
     .INPUTS
         string
         switch
-    
+
     .OUTPUTS
         Hashtable
         Confluence.ContentPermission[]
         Confluence.ContentPermissionSet[]
-    
+
     .EXAMPLE
         Get-ConfluencePermissions -apiURi "http://example.com" -token "000000" -pageId 12345678
         -----------
         Description
         Fetch page restrictions of a specific page
 
-    
+
     .EXAMPLE
         $param = @{apiURi = "http://example.com"; token = "000000"}
         Get-ConfluencePermissions @param -pageid 12345678 -permissionType "View"
@@ -789,14 +795,14 @@ function Get-ConfluencePermissions {
         -----------
         Description
         Fetch page restrictions of a specific page without grouping into a Set
-    
+
     .LINK
         Atlassians's Docs:
             Vector<ContentPermissionSet> getContentPermissionSets(String token, String contentId) - returns all the page level permissions for this page as ContentPermissionSets
             Hashtable getContentPermissionSet(String token, String contentId, String permissionType) - returns the set of permissions on a page as a map of type to a list of ContentPermission, for the type of permission which is either 'View' or 'Edit'
             Vector<ContentPermission> getPagePermissions(String token, String pageId) - Returns a Vector of permissions representing the permissions set on the given page.
 
-    
+
     #>
     [CmdletBinding(
         DefaultParameterSetName='getContentPermissionSets'
@@ -896,22 +902,22 @@ function Set-ConfluencePermissions {
     <#
     .SYNOPSIS
         Set permissions/restrictions for a Confluence Page
-    
+
     .DESCRIPTION
         Set permissions/restrictions for a Confluence Page
-    
+
     .NOTES
         AUTHOR : Oliver Lipkau <oliver@lipkau.net>
         VERSION: 0.0.1 - OL - Initial Code
                  1.0.0 - OL - Replaced hashtables with Objects
-    
+
     .INPUTS
         string
         Confluence.ContentPermissionSet
-    
+
     .OUTPUTS
         bool
-    
+
     .EXAMPLE
         $permissions = Get-ConfluencePermissions -apiURi "http://example.com" -token "000000" -pageId 12345678
         Set-ConfluencePermissions -apiURi "http://example.com" -token "000000" -pageId 87654321 -PermissionType $permissions.type -Permissions $permissions
@@ -919,7 +925,7 @@ function Set-ConfluencePermissions {
         Description
         Sets the same page restrictions of a specific page as from the example page
 
-    
+
     .EXAMPLE
         $param = @{apiURi = "http://example.com"; token = "000000"}
         $permissions = New-Object Confluence.ContentPermission
@@ -932,11 +938,11 @@ function Set-ConfluencePermissions {
         -----------
         Description
         Sets the restrictions of a specific page so only members of the group "Administrators" can view it
-    
+
     .LINK
         Atlassians's Docs:
             boolean setContentPermissions(String token, String contentId, String permissionType, Vector permissions) - sets the page-level permissions for a particular permission type (either 'View' or 'Edit') to the provided vector of ContentPermissions. If an empty list of permissions are passed, all page permissions for the given type are removed. If the existing list of permissions are passed, this method does nothing.
-    
+
     #>
     [CmdletBinding(
         SupportsShouldProcess=$True,
@@ -1005,31 +1011,31 @@ function Get-ConfluenceAttachment {
     <#
     .SYNOPSIS
         Get Attachments from a Confluence Page
-    
+
     .DESCRIPTION
         Get Attachments from a Confluence Page
-    
+
     .NOTES
         AUTHOR : Oliver Lipkau <oliver@lipkau.net>
         VERSION: 0.0.1 - OL - Initial Code
                  1.0.0 - OL - Replaced hashtables with Objects
-    
+
     .INPUTS
         string
         switch
-    
+
     .OUTPUTS
         System.IO.FileInfo
         Confluence.Attachment
         Confluence.Attachment[]
-    
+
     .EXAMPLE
         Get-ConfluenceAttachment -apiURi "http://example.com" -token "000000" -pageId 12345678
         -----------
         Description
         Retrieve all Attachments of a specific page
 
-    
+
     .EXAMPLE
         $param = @{apiURi = "http://example.com"; token = "000000"}
         Get-ConfluenceAttachment @param -pageid 12345678 -pageId 12345678 -fileName "Data.xls" -verions 10
@@ -1043,13 +1049,13 @@ function Get-ConfluenceAttachment {
         -----------
         Description
         Downloads the latest version of the Data.xls file to the local disk
-    
+
     .LINK
         Atlassians's Docs:
             Attachment getAttachment(String token, String pageId, String fileName, String versionNumber) - get information about an attachment.
             Vector<Attachment> getAttachments(String token, String pageId) - returns all the Attachments for this page (useful to point users to download them with the full file download URL returned).
             byte[] getAttachmentData(String token, String pageId, String fileName, String versionNumber) - get the contents of an attachment.
-    
+
     #>
     [CmdletBinding(
         DefaultParameterSetName="getAttachments"
@@ -1158,39 +1164,39 @@ function Get-ConfluenceComment {
     <#
     .SYNOPSIS
         Get all comments of a Confluence Page
-    
+
     .DESCRIPTION
         Get all comments of a Confluence Page
-    
+
     .NOTES
         AUTHOR : Oliver Lipkau <oliver@lipkau.net>
         VERSION: 0.0.1 - OL - Initial Code
                  1.0.0 - OL - Replaced hashtables with Objects
-    
+
     .INPUTS
         string
-    
+
     .OUTPUTS
         Confluence.Comment[]
-    
+
     .EXAMPLE
         Get-ConfluenceChildPage -apiURi "http://example.com" -token "000000" -pageId 12345678
         -----------
         Description
         Fetch all children of a specific page
 
-    
+
     .EXAMPLE
         $param = @{apiURi = "http://example.com"; token = "000000"}
         Get-ConfluenceChildPage @param -pageid 12345678 -recurse
         -----------
         Description
         Fetch recursively all children of a specific page
-    
+
     .LINK
         Atlassians's Docs:
             Vector<Comment> getComments(String token, String pageId) - returns all the comments for this page.
-    
+
     #>
     [CmdletBinding(
     )]
@@ -1220,9 +1226,7 @@ function Get-ConfluenceComment {
             ValueFromPipelineByPropertyName=$true
         )]
         [Alias("id")]
-        [string]$PageId,
-
-        [switch]$p
+        [string]$PageId
     )
 
     Begin
