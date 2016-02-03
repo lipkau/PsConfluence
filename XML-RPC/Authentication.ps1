@@ -1,5 +1,114 @@
 ﻿#Requires -Version 3.0
 <#  Authentications #>
+function Connect-Confluence {
+    <#
+    .SYNOPSIS
+        .
+
+    .DESCRIPTION
+        .
+
+    .NOTES
+        AUTHOR : Oliver Lipkau <oliver@lipkau.net>
+        VERSION: 1.0.0 - OL - Replaced hashtables with Objects
+
+    .INPUTS
+        string
+        System.Management.Automation.PSCredential
+
+    .OUTPUTS
+        string
+        Microsoft.PowerShell.Commands.HtmlWebResponseObject
+
+    .EXAMPLE
+        Invoke-ConfluenceLogin -apiURi "http://example.com" -Credential (Get-Credential)
+        -----------
+        Description
+        Log in to Confluence
+
+    .LINK
+        Atlassians's Docs:
+            String login(String username, String password)
+
+    #>
+    [CmdletBinding(
+    )]
+    [OutputType(
+        [string],
+        [Microsoft.PowerShell.Commands.HtmlWebResponseObject]
+    )]
+    param(
+        # The URi of the API interface.
+        [Parameter(
+            Position=0,
+            Mandatory=$true
+        )]
+        [string]$apiURi,
+
+        # Credentials with which to authentication
+        [Parameter(
+            Position=1,
+            Mandatory=$true
+        )]
+        [System.Management.Automation.PSCredential]$Credential,
+
+        #
+        [ValidateSet('rest','xmlrpc')]
+        [Parameter(
+            Position=2,
+            Mandatory=$true
+        )]
+        [Alias('Type')]
+        $ConnectionType,
+
+        [ValidateSet('OAuth', "Basic")]
+        [Parameter(
+            Mandatory=$false
+        )]
+        [Alias('Method', 'AuthMethod')]
+        $AuthenticationMethod
+    )
+
+    Begin
+    {
+        Write-Verbose "$($MyInvocation.MyCommand.Name):: Function started"
+
+        $formFields = @(@{user="os_username"},@{password="os_password"})
+    }
+
+    Process {
+        switch ($ConnectionType)
+        {
+            "rest" {
+                if ($AuthenticationMethod -eq "OAuth")
+                {
+                    $global:response = Invoke-WebRequest $apiURi -SessionVariable cf
+                    $form = $response.Forms | Where-Object {$_.Fields.Keys -contains $formFields.user -and $_.Fields.Keys -contains $formFields.password}
+                    $form.Fields[$formFields.user] = $Credential.UserName
+                    $form.Fields[$formFields.password] = ($Credential.getnetworkcredential().password)
+                    $response = Invoke-WebRequest -Uri ($apiURi + "" + $form.Action) -WebSession $cf -Method POST -Body $form.Fields
+
+                    Set-ConfluenceEndpoint -apiURi $apiURi -WebSession $cf
+                    return $cf
+                }
+                elseif ($AuthenticationMethod -eq "Basic")
+                {
+                    Set-ConfluenceEndpoint -apiURi $apiURi -Credential $Credential
+                }
+                break
+            }
+            "xmlrpc" {
+                $authToken = Invoke-ConfluenceCall -apiURi $apiURi -MethodName "confluence2.login" -Params ([string]($Credential.UserName),[string]($Credential.getnetworkcredential().password))
+
+                Set-ConfluenceEndpoint -apiURi $apiURi -token $authToken
+                return $authToken
+            }
+        }
+    }
+
+    End
+        { Write-Verbose "$($MyInvocation.MyCommand.Name):: Function ended" }
+}
 function Invoke-ConfluenceLogin {
     <#
     .SYNOPSIS
