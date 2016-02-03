@@ -16,7 +16,7 @@ namespace Confluence
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-serverinfoServerInfo
  	 */
-	public struct ServerInfo {
+	public class ServerInfo {
 		public int majorVersion;
 		public int minorVersion;
 		public int patchLevel;
@@ -29,7 +29,7 @@ namespace Confluence
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-spacesummarySpaceSummary
  	 */
-	public struct SpaceSummary {
+	public class SpaceSummary {
 		public string key;
 		public string name;
 		public string type;
@@ -40,7 +40,7 @@ namespace Confluence
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-spaceSpace
  	 */
-	public struct Space {
+	public class Space {
 		public string key;
 		public string name;
 		public string url;
@@ -52,7 +52,7 @@ namespace Confluence
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-pagesummaryPageSummary
  	 */
-	public struct PageSummary {
+	public class PageSummary {
 		public Int64 id;
 		public string space;
 		public int version;
@@ -61,12 +61,13 @@ namespace Confluence
 		public string url;
 		public int permissions;
 	}
+
  	/**
  	 * Confluence.Page
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-pagePage
  	 */
-	public struct Page {
+	public class Page {
 		public Int64 id;
 		public string space;
 		public Int64 parentId;
@@ -83,33 +84,36 @@ namespace Confluence
 		public bool current;
 		public int permissions;
 	}
+
  	/**
  	 * Confluence.PageUpdateOptions
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-pageupdateoptionsPageUpdateOptions
  	 */
-	public struct PageUpdateOptions {
+	public class PageUpdateOptions {
 		public string versionComment;
 		public bool minorEdit;
 	}
+
  	/**
  	 * Confluence.PageHistorySummary
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-pagehistorysummaryPageHistorySummary
  	 */
-	public struct PageHistorySummary {
+	public class PageHistorySummary {
 		public Int64 id;
 		public int version;
 		public string modifier;
 		public DateTime modified;
 		public string versionComment;
 	}
+
  	/**
  	 * Confluence.BlogEntrySummary
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-blogentrysummaryBlogEntrySummary
  	 */
-	public struct BlogEntrySummary {
+	public class BlogEntrySummary {
 		public Int64 id;
 		public string space;
 		public string title;
@@ -117,12 +121,13 @@ namespace Confluence
 		public int permissions;
 		public DateTime publishDate;
 	}
+
  	/**
  	 * Confluence.BlogEntry
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-blogentryBlogEntry
  	 */
-	public struct BlogEntry {
+	public class BlogEntry {
 		public Int64 id;
 		public string space;
 		public string title;
@@ -131,24 +136,26 @@ namespace Confluence
 		public string content;
 		public int permissions;
 	}
+
  	/**
  	 * Confluence.SearchResult
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-searchresultSearchResult
  	 */
-	public struct SearchResult {
+	public class SearchResult {
 		public string title;
 		public string url;
 		public string excerpt;
 		public string type;
 		public Int64 id;
 	}
+
  	/**
  	 * Confluence.Attachment
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-attachmentAttachment
  	 */
-	public struct Attachment {
+	public class Attachment {
 		public Int64 id;
 		public string pageId;
 		public string title;
@@ -160,12 +167,13 @@ namespace Confluence
 		public string url;
 		public string comment;
 	}
+
  	/**
  	 * Confluence.Comment
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-commentComment
  	 */
-	public struct Comment {
+	public class Comment {
 		public Int64 id;
 		public string pageId;
 		public Int64 parentId;
@@ -177,62 +185,68 @@ namespace Confluence
 		public DateTime modified;
 		public string modifier;
 	}
+
  	/**
  	 * Confluence.User
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-userUser
  	 */
-	public struct User {
+	public class User {
 		public string name;
 		public string fullname;
 		public string email;
 		public string url;
 	}
+
  	/**
  	 * Confluence.ContentPermission
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-contentpermissionContentPermission
  	 */
-	public struct ContentPermission {
+	public class ContentPermission {
 		public string type;
 		public string userName;
 		public string groupName;
 	}
+
  	/**
  	 * Confluence.ContentPermissionSet
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-contentpermissionsetContentPermissionSet
  	 */
-	public struct ContentPermissionSet {
+	public class ContentPermissionSet {
 		public string type;
 		public List<ContentPermission> contentPermissions;
 	}
+
  	/**
  	 * Confluence.SpacePermissionSet
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-spacepermissionsetSpacePermissionSet
  	 */
-	public struct SpacePermissionSet {
+	public class SpacePermissionSet {
 		public string type;
 		public List<ContentPermission> contentPermissions;
 	}
+
  	/**
  	 * Confluence.Label
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-labelLabel
  	 */
-	public struct Label {
+	public class Label {
 		public string name;
 		public string owner;
 		public string NameSpace;
 		public Int64 id;
 	}
+
  	/**
  	 * Confluence.UserInformation
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-userinformationUserInformation
  	 */
-	public struct UserInformation {
+	public class UserInformation {
 		public string username;
 		public string content;
 		public string creatorName;
@@ -242,12 +256,13 @@ namespace Confluence
 		public DateTime creationDate;
 		public DateTime lastModificationDate;
 	}
+
  	/**
  	 * Confluence.ClusterInformation
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-clusterinformationClusterInformation
  	 */
-	public struct ClusterInformation {
+	public class ClusterInformation {
 		public bool isRunning;
 		public string name;
 		public int memberCount;
@@ -255,12 +270,13 @@ namespace Confluence
 		public string multicastAddress;
 		public string multicastPort;
 	}
+
  	/**
  	 * Confluence.NodeStatus
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-nodestatusNodeStatus
  	 */
-	// public struct NodeStatus {
+	// public class NodeStatus {
 	// 	public int nodeId;
 	// 	public Map jvmStats;
 	// 	public Map props;
@@ -272,7 +288,7 @@ namespace Confluence
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-contentsummariesContentSummaries
  	 */
-	// public struct ContentSummaries {
+	// public class ContentSummaries {
 	// 	public int totalAvailable;
 	// 	public int offset;
 	// 	public ArrayList<ContentSummary> content;
@@ -283,7 +299,7 @@ namespace Confluence
  	 *
  	 * https://developer.atlassian.com/confdev/confluence-rest-api/confluence-xml-rpc-and-soap-apis/remote-confluence-dataobjects#RemoteConfluenceDataObjects-contentsummaryContentSummary
  	 */
-	public struct ContentSummary {
+	public class ContentSummary {
 		public Int64 id;
 		public string type;
 		public string space;
