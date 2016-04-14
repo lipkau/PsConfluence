@@ -130,7 +130,8 @@ function Get-ConfluencePage {
             -and $PsCmdlet.ParameterSetName -in @('getPageById') `
             -and (!(
                 $_ -is [Confluence.PageSummary] `
-                -or $_ -is [Confluence.Page]
+                -or $_ -is [Confluence.Page] `
+                -or $_ -is [Confluence.PageHistorySummary]
             ))
         )
         {
@@ -568,7 +569,6 @@ function Move-ConfluencePage {
         # Position of the moved page in relation to the TargetPage. "Above" and "Below" will make the moved page a sibbling of the TargetPage, while "append" makes it a child page.
         [Parameter(
             Position=2,
-            Mandatory=$true,
             ParameterSetName="movePage"
         )]
         [ValidateSet("above","below","append")]
@@ -812,7 +812,7 @@ function Get-ConfluencePageHistory {
     End
         { Write-Verbose "$($MyInvocation.MyCommand.Name):: Function ended" }
 }
-function Get-ConfluencePermissions {
+function Get-ConfluencePermission {
     <#
         .SYNOPSIS
             Get permissions/restrictions of a Confluence Page
@@ -961,7 +961,7 @@ function Get-ConfluencePermissions {
     End
         { Write-Verbose "$($MyInvocation.MyCommand.Name):: Function ended" }
 }
-function Set-ConfluencePermissions {
+function Set-ConfluencePermission {
     <#
         .SYNOPSIS
             Set permissions/restrictions for a Confluence Page
@@ -1357,7 +1357,7 @@ function Get-ConfluenceComment {
 <#function Remove-ConfluenceComment {
     #boolean removeComment(String token, String commentId) - removes a comment from the page.
 }#>
-function Render-ConfluenceContent {
+function Resolve-ConfluenceContent {
     <#
         .SYNOPSIS
             Render HTML content for Page
