@@ -3,38 +3,34 @@
 <#  Helper Functions #>
 function Set-ConfluenceEndpoint {
     <#
-    .SYNOPSIS
-        Set API's Endpoint information as default
+        .SYNOPSIS
+            Set API's Endpoint information as default
 
-    .DESCRIPTION
-        Set API's Endpoint parameters as default parameters in order to avoid having to send them excplicitly with every call
+        .DESCRIPTION
+            Set API's Endpoint parameters as default parameters in order to avoid having to send them excplicitly with every call
 
-    .NOTES
-        AUTHOR : Oliver Lipkau <oliver@lipkau.net>
-        VERSION: 1.0.0 - OL - initail code
+        .NOTES
+            AUTHOR : Oliver Lipkau <oliver@lipkau.net>
+            VERSION: 1.0.0 - OL - initail code
 
-    .INPUTS
-        string
-        System.Management.Automation.PSCredential
-        Microsoft.PowerShell.Commands.WebRequestSession
+        .INPUTS
+            string
+            System.Management.Automation.PSCredential
+            Microsoft.PowerShell.Commands.WebRequestSession
 
-    .OUTPUTS
-        string
-        Microsoft.PowerShell.Commands.WebRequestSession
+        .OUTPUTS
+            string
+            Microsoft.PowerShell.Commands.WebRequestSession
 
-    .EXAMPLE
-        Set-ConfluenceEndpoint -apiURi "http://example.com" -token "000000"
-        Get-ConfluencePage -spaceKey ABC
-        -----------
-        Description
-        Set API Endpoint globally to avoid having to sent it with each command
+        .EXAMPLE
+            Set-ConfluenceEndpoint -apiURi "http://example.com" -token "000000"
+            Get-ConfluencePage -spaceKey ABC
+            -----------
+            Description
+            Set API Endpoint globally to avoid having to sent it with each command
     #>
     [CmdletBinding()]
-    [OutputType(
-        [string],
-        [System.Management.Automation.PSCredential],
-        [Microsoft.PowerShell.Commands.WebRequestSession]
-    )]
+    [OutputType()]
     param(
         [Parameter(
             Position=1,
@@ -55,14 +51,27 @@ function Set-ConfluenceEndpoint {
         [Parameter(
             Mandatory = $false
         )]
-        [Microsoft.PowerShell.Commands.WebRequestSession]$WebSession
+        [Microsoft.PowerShell.Commands.WebRequestSession]$WebSession,
+
+        [Parameter(
+            Mandatory=$false
+        )]
+        [string]$Method
     )
 
     Begin
     {
         Write-Verbose "$($MyInvocation.MyCommand.Name):: Function started"
 
-        $commandList = Get-Command -Noun Confluence* | Where-Object {$_.Name -ne 'Set-ConfluenceEndpoint'}
+        [System.Collections.ArrayList]$commandList = Get-Command -Noun Confluence* | Where-Object {$_.Name -ne 'Set-ConfluenceEndpoint'}
+        if ($Method -eq "pdfexport")
+        {
+            $commandList = @(Get-Command -Noun Confluence*PDF)
+        }
+        else
+        {
+            Get-Command -Noun Confluence*PDF | ForEach-Object {$commandList.Remove($_)}
+        }
         $commandList += 'Invoke-ConfluenceCall'
     }
     Process
@@ -94,19 +103,19 @@ function Set-ConfluenceEndpoint {
 }
 function Invoke-ConfluenceCall {
     <#
-    .SYNOPSIS
-        Wrapper to execute calls to Confluence API
+        .SYNOPSIS
+            Wrapper to execute calls to Confluence API
 
-    .DESCRIPTION
-        Wrapper to execute calls to Confluence API
+        .DESCRIPTION
+            Wrapper to execute calls to Confluence API
 
-    .NOTES
-        AUTHOR : Oliver Lipkau <oliver@lipkau.net>
-        VERSION: 1.0.0 - OL - initail code
+        .NOTES
+            AUTHOR : Oliver Lipkau <oliver@lipkau.net>
+            VERSION: 1.0.0 - OL - initail code
 
-    .INPUTS
-        string
-        Object
+        .INPUTS
+            string
+            Object
     #>
     [CmdletBinding()]
     param(
@@ -164,15 +173,56 @@ function Invoke-ConfluenceCall {
     }
 
     Process {
-        $global:resultSet = Send-XmlRpcRequest -Url $apiURi -MethodName $MethodName -Params $Params -CustomTypes $ConfluenceObjects
+        $resultSet = Send-XmlRpcRequest -Url $apiURi -MethodName $MethodName -Params $Params -CustomTypes $ConfluenceObjects
         Write-Debug "Server answer: $resultSet"
 
         if ($resultSet.methodResponse.fault)
         {
+            # Parse Remote Exception Object
             $re = $resultSet.methodResponse.fault.value.struct.member
-            $msg = $re[0].value
-            $errid = $re[1].value.int # not used yet
-            Throw $msg
+
+            $exceptionId = $re[1].value.int # always 0: Confluence bug?
+            $exceptionMessage = $re[0].value
+
+            # Define most accurate exception category according to
+            # https://msdn.microsoft.com/en-us/library/system.management.automation.errorcategory(v=vs.85).aspx
+            switch -regex ($exceptionMessage)
+            {
+                "com\.atlassian\.confluence\.rpc\.AlreadyExistsException" {
+                    $exceptionCategory = "ResourceExists"
+                    break
+                }
+                "com\.atlassian\.confluence\.rpc\.(?:AuthenticationFailedException|InvalidSessionException)" {
+                    $exceptionCategory = "AuthenticationError"
+                    break
+                }
+                "com\.atlassian\.confluence\.rpc\.NotFoundException" {
+                    $exceptionCategory = "ObjectNotFound"
+                    break
+                }
+                "com\.atlassian\.confluence\.rpc\.NotPermittedException" {
+                    $exceptionCategory = "PermissionDenied"
+                    break
+                }
+                "com\.atlassian\.confluence\.rpc\.OperationTimedOutException" {
+                    $exceptionCategory = "OperationTimeout"
+                    break
+                }
+                "com\.atlassian\.confluence\.rpc\.NotFoundException" {
+                    $exceptionCategory = "WriteError"
+                    break
+                }
+                Default {
+                    $exceptionCategory = "InvalidOperation"
+                    break
+                }
+            }
+
+            # generate Exception
+            $hostException = New-Object -TypeName System.Management.Automation.Host.HostException -ArgumentList $exceptionMessage
+            $errorRecord = New-Object -TypeName System.Management.Automation.ErrorRecord -ArgumentList $hostException,$exceptionId,$exceptionCategory,$MethodName
+
+            Throw $errorRecord
         }
         else
         {
@@ -192,43 +242,31 @@ function Invoke-ConfluenceCall {
 }
 function Write-Base64ToFile {
     <#
-    .SYNOPSIS
-        Write Base64 string to File
+        .SYNOPSIS
+            Write Base64 string to File
 
-    .DESCRIPTION
-        Write Base64 string to File
+        .DESCRIPTION
+            Write Base64 string to File
 
-    .NOTES
-        AUTHOR : Oliver Lipkau <oliver@lipkau.net>
-        VERSION: 1.0.0 - OL - Initial Code
+        .NOTES
+            AUTHOR : Oliver Lipkau <oliver@lipkau.net>
+            VERSION: 1.0.0 - OL - Initial Code
 
-    .INPUTS
-        string
-        ArrayListEnumeratorSimple
+        .INPUTS
+            string
+            ArrayListEnumeratorSimple
 
-    .OUTPUTS
-        FileInfo
+        .OUTPUTS
+            FileInfo
 
-    .EXAMPLE
-        Get-ConfluenceChildPage -apiURi "http://example.com" -token "000000" -pageId 12345678
-        -----------
-        Description
-        Fetch all children of a specific page
+        .EXAMPLE
+            Write-Base64ToFile -FilePath $FilePath -base64 $response.base64 -PassThru
+            -----------
+            Description
+            Save Base64 string to File
 
-
-    .EXAMPLE
-        $param = @{apiURi = "http://example.com"; token = "000000"}
-        Get-ConfluenceChildPage @param -pageid 12345678 -recurse
-        -----------
-        Description
-        Fetch recursively all children of a specific page
-
-    .LINK
-        Atlassians's Docs:
-            Attachment getAttachment(String token, String pageId, String fileName, String versionNumber) - get information about an attachment.
-            Vector<Attachment> getAttachments(String token, String pageId) - returns all the Attachments for this page (useful to point users to download them with the full file download URL returned).
-            byte[] getAttachmentData(String token, String pageId, String fileName, String versionNumber) - get the contents of an attachment.
-
+        .LINK
+            Get-ConfluenceAttachment
     #>
     [CmdletBinding(
     )]
@@ -242,9 +280,10 @@ function Write-Base64ToFile {
         [string]$FilePath,
 
         [Parameter(
-            Mandatory=$true
+            Mandatory=$true,
+            ValueFromPipeline=$true
         )]
-        $base64,
+        $Base64,
 
         [switch]$PassThru
     )
@@ -284,7 +323,7 @@ function Get-ConfluenceServerInfo {
     )
 
     Process {
-        return ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getServerInfo" -Params ($token))
+        Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getServerInfo" -Params ($token)
     }
 }
 function ConvertTo-ConfluenceStorageFormat {
@@ -308,21 +347,19 @@ function ConvertTo-ConfluenceStorageFormat {
             Mandatory=$true,
             ValueFromPipeline=$true
         )]
-        [string[]]$Markup
+        [string]$Markup
     )
 
     Begin {
-        $out = @()
+
     }
 
     Process {
-        foreach ($m in $Markup) {
-            $out += ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.convertWikiToStorageFormat" -Params ($token,$m))
-        }
+        Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.convertWikiToStorageFormat" -Params ($token,$Markup)
     }
 
     End {
-        Write-Output $out
+
     }
 }
 <# /General #>
