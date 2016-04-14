@@ -1184,20 +1184,24 @@ function Get-ConfluenceAttachment {
         # Name of the attached file.
         [Parameter(
             Mandatory=$true,
-            ParameterSetName="getAttachment"
+            ParameterSetName="getAttachment",
+            ValueFromPipelineByPropertyName=$true
         )]
         [Parameter(
             Mandatory=$true,
-            ParameterSetName="getAttachmentData"
+            ParameterSetName="getAttachmentData",
+            ValueFromPipelineByPropertyName=$true
         )]
         [string]$FileName,
 
         # Version of the attachment. "0" is the latest version.
         [Parameter(
-            ParameterSetName="getAttachment"
+            ParameterSetName="getAttachment",
+            ValueFromPipelineByPropertyName=$true
         )]
         [Parameter(
-            ParameterSetName="getAttachmentData"
+            ParameterSetName="getAttachmentData",
+            ValueFromPipelineByPropertyName=$true
         )]
         [string]$Version = "0",
 
