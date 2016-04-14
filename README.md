@@ -15,20 +15,20 @@ PowerShell library to interact with Atlassian's Confluence API
 **THIS MODULE DEPENDENT OF [XmlRpc](https://github.com/lipkau/XmlRpc)**
 
 ## Examples  
-* Remove all Pages in Space:
-```
+* Remove all Pages in a Space:
+```PowerShell
 Import-Module "PsConfluence"
 Connect-Confluence -apiURi "https://confluence.mycompany.com/rpc/xmlrpc" -Credential (Get-Credential)
 Get-ConfluencePage -SpaceKey "ABC" | Remove-ConfluencePage
 ```
 * Get all Pages in Space and replace "User" with "Customer"
-```
+```PowerShell
 Import-Module "PsConfluence"
 Connect-Confluence -apiURi "https://confluence.mycompany.com/rpc/xmlrpc" -Credential (Get-Credential)
 Get-ConfluencePage -SpaceKey "ABC" | Get-ConfluencePage | Foreach {$_.content -replace "[uU]ser" "Customer"} | Set-ConfluencePage
 ```
 * Download all XML files attached to a Page:
-```
+```PowerShell
 Import-Module "PsConfluence"
 $apiUri = "https://confluence.mycompany.com/rpc/xmlrpc"
 Connect-Confluence -apiURi $apiUri -Credential (Get-Credential)
