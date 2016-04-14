@@ -55,12 +55,9 @@ function Connect-Confluence {
 
         # API Connection type. Can be SOAP (XML-RPC) or REST.
         [ValidateSet('rest','xmlrpc')]
-        [Parameter(
-            Position=2,
-            Mandatory=$true
-        )]
+        [Parameter()]
         [Alias('Type')]
-        $ConnectionType,
+        $ConnectionType = "xmlrpc",
 
         # Authentication Mode. Can be OAuth or Basic.
         # OAuth will return a WebSession Instance.
