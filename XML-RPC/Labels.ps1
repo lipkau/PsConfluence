@@ -1,47 +1,92 @@
 ﻿#Requires -Version 3.0
 <#  Labels #>
 function Get-ConfluenceLabels {
-    #Vector getLabelsById(String token, long objectId) - Returns all labels for the given ContentEntityObject ID
-    #Vector getMostPopularLabels(String token, int maxCount) - Returns the most popular labels for the Confluence instance, with a specified maximum number.
-    #Vector getMostPopularLabelsInSpace(String token, String spaceKey, int maxCount) - Returns the most popular labels for the given spaceKey, with a specified maximum number of results.
-    #Vector getRecentlyUsedLabels(String token, int maxResults) - Returns the recently used labels for the Confluence instance, with a specified maximum number of results.
-    #Vector getRecentlyUsedLabelsInSpace(String token, String spaceKey, int maxResults) - Returns the recently used labels for the given spaceKey, with a specified maximum number of results.
-    #TODO: Vector getLabelsByDetail(String token, String labelName, String namespace, String spaceKey, String owner) - Retrieves the labels matching the given labelName, namespace, spaceKey or owner.
-    [CmdletBinding(DefaultParameterSetName="getLabelsById")]
+    <#
+    .SYNOPSIS
+        Remove Page from Confluence
+
+    .DESCRIPTION
+        Remove a Page from Confluence
+
+    .NOTES
+        AUTHOR : Oliver Lipkau <oliver@lipkau.net>
+        VERSION: 0.0.1 - OL - Initial Code
+                 1.0.0 - OL - Replaced hashtables with Objects
+
+    .INPUTS
+        string
+        int
+        Confluence.Page
+        Confluence.PageSummary
+
+    .OUTPUTS
+
+
+    .EXAMPLE
+        Remove-ConfluencePage -apiURi "http://example.com" -token "000000" -pageId 12345678
+        -----------
+        Description
+        Remove a specific Page by it's ID
+
+
+    .EXAMPLE
+        $param = @{apiURi = "http://example.com"; token = "000000"}
+        $Page = Get-ConfluencePage @param -spacekey "ABC" -pagetitle "My new Title"
+        Remove-ConfluencePage @param -page $page
+        -----------
+        Description
+        Fetch a Page and remove it
+
+    .EXAMPLE
+        $param = @{apiURi = "http://example.com"; token = "000000"}
+        Get-ConfluencePage @param -spacekey "ABC" | Remove-ConfluencePage @param
+        -----------
+        Description
+        Fetch all Pages in a Space and remove them
+
+    .LINK
+        Atlassians's Docs:
+            Vector getLabelsById(String token, long objectId) - Returns all labels for the given ContentEntityObject ID
+            Vector getMostPopularLabels(String token, int maxCount) - Returns the most popular labels for the Confluence instance, with a specified maximum number.
+            Vector getMostPopularLabelsInSpace(String token, String spaceKey, int maxCount) - Returns the most popular labels for the given spaceKey, with a specified maximum number of results.
+            Vector getRecentlyUsedLabels(String token, int maxResults) - Returns the recently used labels for the Confluence instance, with a specified maximum number of results.
+            Vector getRecentlyUsedLabelsInSpace(String token, String spaceKey, int maxResults) - Returns the recently used labels for the given spaceKey, with a specified maximum number of results.
+            TODO: Vector getLabelsByDetail(String token, String labelName, String namespace, String spaceKey, String owner) - Retrieves the labels matching the given labelName, namespace, spaceKey or owner.
+
+    #>
+    [CmdletBinding(
+        DefaultParameterSetName='getRecentlyUsedLabels'
+    )]
+    [OutputType(
+        [Confluence.Label],
+        [Confluence.Label[]]
+    )]
     param(
+        # The URi of the API interface.
         [Parameter(
             Position=0,
             Mandatory=$true
         )]
         [string]$apiURi,
 
+        # Confluence's Authentication Token.
         [Parameter(
             Position=1,
             Mandatory=$true
         )]
         [string]$Token,
 
+        # Id of the object from which to retrieve the Labels
         [Parameter(
             Position=2,
             Mandatory=$true,
-            ValueFromPipeline=$true,
+            ValueFromPipelineByPropertyName=$true,
             ParameterSetName="getLabelsById"
         )]
+        [Alias('id')]
         [long]$objectId,
 
-        [Parameter(
-            Position=2,
-            Mandatory=$true,
-            ParameterSetName="getMostPopularLabelsInSpace"
-        )]
-        [Parameter(
-            Position=2,
-            Mandatory=$true,
-            ParameterSetName="getRecentlyUsedLabelsInSpace"
-        )]
-        [Alias("Space")]
-        [string]$SpaceKey,
-
+        # Spapce from which to retrieve the Labels
         [Parameter(
             Position=2,
             Mandatory=$true,
@@ -49,64 +94,137 @@ function Get-ConfluenceLabels {
         )]
         [Parameter(
             Position=2,
-            Mandatory=$true,
             ParameterSetName="getRecentlyUsedLabels"
         )]
         [Parameter(
-            Position=3,
-            Mandatory=$true,
-            ParameterSetName="getMostPopularLabelsInSpace"
+            ParameterSetName="getLabelsByDetail"
+        )]
+        [Alias("Space")]
+        [string]$SpaceKey,
+
+        # Limit the numer of resutls
+        [Parameter(
+            ParameterSetName="getMostPopularLabels"
         )]
         [Parameter(
-            Position=3,
-            Mandatory=$true,
-            ParameterSetName="getRecentlyUsedLabelsInSpace"
+            ParameterSetName="getRecentlyUsedLabels"
         )]
-        [int]$maxCount
+        [int16]$maxCount = 100,
+
+        # Whether to get Most Popular or Most Recent Labels
+        [Parameter(
+            ParameterSetName="getMostPopularLabels"
+        )]
+        [Parameter(
+            ParameterSetName="getRecentlyUsedLabels"
+        )]
+        [ValidateSet(
+            "recent",
+            "popular"
+        )]
+        [string]$Condition = "recent",
+
+        # Name of a specific Label
+        [Parameter(
+            ParameterSetName="getLabelsByDetail"
+        )]
+        [string]$LabelName = "",
+
+        # 
+        [Parameter(
+            ParameterSetName="getLabelsByDetail"
+        )]
+        [string]$NameSpace = "",
+
+        # 
+        [Parameter(
+            ParameterSetName="getLabelsByDetail"
+        )]
+        [string]$Owner =""
     )
 
-    Begin {
-        $o = @()
-    }
+    Begin
+        { Write-Verbose "$($MyInvocation.MyCommand.Name):: Function started" }
 
     Process {
         switch ($PsCmdlet.ParameterSetName) {
             "getLabelsById" {
-                if ($r = Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getLabelsById" -Params ($token,$objectId)) {
-                    $o += ConvertFrom-Xml $r
+                $response = ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getLabelsById" -Params ($token,$objectId))
+                if ($response)
+                {
+                    foreach ($Label in $response)
+                    {
+                        [Confluence.Label]$Label
+                    }
                 }
                 break
             }
-            "getMostPopularLabelsInSpace" {
-                if ($r = Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getMostPopularLabelsInSpace" -Params ($token,$SpaceKey,$maxCount)) {
-                    $o += ConvertFrom-Xml $r
+            {"getRecentlyUsedLabels","getMostPopularLabels" -contains $_} {
+                if ($Condition -eq "recent")
+                {
+                    if ($spaceKey)
+                    {
+                        $response = ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getRecentlyUsedLabelsInSpace" -Params ($token,$SpaceKey,$maxCount))
+                        if ($response)
+                        {
+                            foreach ($Label in $response)
+                            {
+                                [Confluence.Label]$Label
+                            }
+                        }
+                        break
+                    } else {
+                        $response = ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getRecentlyUsedLabels" -Params ($token,$maxCount))
+                        if ($response)
+                        {
+                            foreach ($Label in $response)
+                            {
+                                [Confluence.Label]$Label
+                            }
+                        }
+                        break
+                    }
+                } else {
+                    if ($spaceKey)
+                    {
+                        $response = ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getMostPopularLabelsInSpace" -Params ($token,$SpaceKey,$maxCount))
+                        if ($response)
+                        {
+                            foreach ($Label in $response)
+                            {
+                                [Confluence.Label]$Label
+                            }
+                        }
+                        break
+                    } else {
+                        $response = ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getMostPopularLabels" -Params ($token,$maxCount))
+                        if ($response)
+                        {
+                            foreach ($Label in $response)
+                            {
+                                [Confluence.Label]$Label
+                            }
+                        }
+                        break
+                    }
                 }
-                break
             }
-            "getRecentlyUsedLabelsInSpace" {
-                if ($r = Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getRecentlyUsedLabelsInSpace" -Params ($token,$SpaceKey,$maxCount)) {
-                    $o += ConvertFrom-Xml $r
-                }
-                break
-            }
-            "getMostPopularLabels" {
-                if ($r = Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getMostPopularLabels" -Params ($token,$maxCount)) {
-                    $o += ConvertFrom-Xml $r
-                }
-                break
-            }
-            "getRecentlyUsedLabels" {
-                if ($r = Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getRecentlyUsedLabels" -Params ($token,$maxCount)) {
-                    $o += ConvertFrom-Xml $r
+            "getLabelsByDetail" {
+                $response = ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.getLabelsByDetail" -Params ($token,$labelName,$namespace,$spaceKey, $owner))
+                if ($response)
+                {
+                    foreach ($Label in $response)
+                    {
+                        [Confluence.Label]$Label
+                    }
                 }
                 break
             }
         }
     }
 
-    End {
-        $o
-    }
+    End
+        { Write-Verbose "$($MyInvocation.MyCommand.Name):: Function ended" }
 }
 #getSpacesWithLabel is in <Space/>
 <#function Get-ConfluenceRelatedLabel {
