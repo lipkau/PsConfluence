@@ -103,10 +103,10 @@ function Export-ConfluenceSpace {
         [ValidateSet("XML","HTML")]
         [Alias("Type","Format")]
         [string]$exportType = "XML",
-        
+
 
         [Alias("All")]
-        [switch]$exportAll   
+        [switch]$exportAll
     )
 
     Begin {
@@ -144,7 +144,7 @@ function Export-ConfluenceSpaceToPDF {
             ValueFromPipeline=$true
         )]
         [Alias("Space")]
-        [string[]]$SpaceKey 
+        [string[]]$SpaceKey
     )
 
     Begin {
@@ -190,14 +190,14 @@ function Add-ConfluenceSpace {
             ParameterSetName="addPersonalSpace"
         )]
         $personalSpace,
-        
+
         [Parameter(
             Position=3,
             Mandatory=$true,
             ParameterSetName="addPersonalSpace"
         )]
         [Alias("User")]
-        [switch]$userName   
+        [switch]$userName
     )
 
     Process {
@@ -422,14 +422,14 @@ function Remove-ConfluenceTrashItem {
         switch ($PsCmdlet.ParameterSetName) {
             "purgeFromTrash" {
                 if ($PSCmdlet.ShouldProcess($SpaceKey)) {
-                    return ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.storeSpace" -Params ($token,$Space))
+                    Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.purgeFromTrash" -Params ($token,$SpaceKey, $contentId)
                 }
                 break
             }
             "emptyTrash" {
                 if ($RemoveAll) {
                     if ($PSCmdlet.ShouldProcess($SpaceKey)) {
-                        return ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.storeSpace" -Params ($token,$Space))
+                        Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.emptyTrash" -Params ($token,$SpaceKey)
                     }
                 }
                 break
