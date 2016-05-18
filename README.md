@@ -12,7 +12,7 @@ PowerShell library to interact with Atlassian's Confluence API
 >This Module uses Confluence's SOAP (XML-RPC); which was deprecated by Atlassian with Confluence v5.5.
 >As the suggested replacement (REST) does not support all methods this Module uses, it was not yet migrated.
 
-**THIS MODULE DEPENDS OF [XmlRpc](https://github.com/lipkau/XmlRpc)**
+**THIS MODULE DEPENDS ON [XmlRpc](https://github.com/lipkau/XmlRpc)**
 
 ## Examples  
 * Remove all Pages in a Space:
