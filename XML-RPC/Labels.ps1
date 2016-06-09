@@ -130,13 +130,13 @@ function Get-ConfluenceLabels {
         )]
         [string]$LabelName = "",
 
-        # 
+        #
         [Parameter(
             ParameterSetName="getLabelsByDetail"
         )]
         [string]$NameSpace = "",
 
-        # 
+        #
         [Parameter(
             ParameterSetName="getLabelsByDetail"
         )]
@@ -236,13 +236,194 @@ function Get-ConfluenceLabels {
     #Vector getLabelContentByName(String token, String labelName) - Returns the content for a given label name.
     #Vector getLabelContentByObject(String token, Label labelObject) - Returns the content for a given Label  object.
 }#>
-#getSpacesContainingContentWithLabel os om <Space/>
-<#function Add-ConfluenceeLabel {
-    #boolean addLabelByName(String token, String labelName, long objectId) - Adds label(s) to the object with the given ContentEntityObject ID. For multiple labels, labelName should be in the form of a space-separated or comma-separated string.
-    #boolean addLabelById(String token, long labelId, long objectId) - Adds a label with the given ID to the object with the given ContentEntityObject ID.
-    #boolean addLabelByObject(String token, Label  labelObject, long objectId) - Adds the given label object to the object with the given ContentEntityObject ID.
-    #boolean addLabelByNameToSpace(String token, String labelName, String spaceKey) - Adds a label to description of a space with the given space key. Prefix labelName with "team:" in order to make it a space category.
-}#>
+#getSpacesContainingContentWithLabel is in <Space/>
+function Add-ConfluenceLabel {
+    <#
+        .SYNOPSIS
+            Adds Label to Confluence Content
+
+        .DESCRIPTION
+            Adds Label to Confluence Content
+
+        .NOTES
+            AUTHOR : Oliver Lipkau <oliver@lipkau.net>
+            VERSION: 1.0.0 - OL - Initial Code
+
+        .INPUTS
+            string
+            Confluence.Label
+
+        .OUTPUTS
+            Boolean
+
+        .EXAMPLE
+
+
+        .LINK
+            Atlassians's Docs:
+                boolean addLabelByName(String token, String labelName, long objectId) - Adds label(s) to the object with the given ContentEntityObject ID. For multiple labels, labelName should be in the form of a space-separated or comma-separated string.
+                boolean addLabelById(String token, long labelId, long objectId) - Adds a label with the given ID to the object with the given ContentEntityObject ID.
+                boolean addLabelByObject(String token, Label  labelObject, long objectId) - Adds the given label object to the object with the given ContentEntityObject ID.
+                boolean addLabelByNameToSpace(String token, String labelName, String spaceKey) - Adds a label to description of a space with the given space key. Prefix labelName with "team:" in order to make it a space category.
+    #>
+    [CmdletBinding(
+        ConfirmImpact = 'Low',
+        SupportsShouldProcess = $true,
+        DefaultParameterSetName = 'byString'
+    )]
+    [OutputType(
+        [bool]
+    )]
+    param(
+        # The URi of the API interface.
+        # Value can be set persistently with Set-ConfluenceEndpoint.
+        [Parameter(
+            Mandatory=$true
+        )]
+        [string]$apiURi,
+
+        # Confluence's Authentication Token.
+        # Value can be set persistently with Set-ConfluenceEndpoint.
+        [Parameter(
+            Mandatory=$true
+        )]
+        [string]$Token,
+
+        # Confluence Page.
+        # Can be sent though the pipe, in which case an object of type Confluence.Page is expected.
+        [Parameter(
+            Position=0,
+            Mandatory=$true,
+            ValueFromPipeline=$true,
+            ParameterSetName = 'byString',
+            ValueFromPipelinebyPropertyName = $true
+        )]
+        [Parameter(
+            Position=0,
+            Mandatory=$true,
+            ValueFromPipeline=$true,
+            ParameterSetName = 'byLabelObject',
+            ValueFromPipelinebyPropertyName = $true
+        )]
+        [Parameter(
+            Position=0,
+            Mandatory=$true,
+            ValueFromPipeline=$true,
+            ParameterSetName = 'byLabelId',
+            ValueFromPipelinebyPropertyName = $true
+        )]
+        [Alias("id")]
+        $Object,
+
+        # Key of the Space to be labeled
+        [Parameter(
+            Position=0,
+            Mandatory=$true,
+            ParameterSetName = 'onSpace'
+        )]
+        [string]$SpaceKey,
+
+        # Label as text string
+        [Parameter(
+            Position=1,
+            Mandatory=$true,
+            ParameterSetName = 'onSpace'
+        )]
+        [Parameter(
+            Position=1,
+            Mandatory=$true,
+            ParameterSetName = 'byString'
+        )]
+        [string[]]$LabelName,
+
+
+        [Parameter(
+            Position=1,
+            Mandatory=$true,
+            ParameterSetName = 'byLabelId'
+        )]
+        [long]$LabelId,
+
+        [Parameter(
+            Position=1,
+            Mandatory=$true,
+            ParameterSetName = 'byLabelObject'
+        )]
+        [Confluence.Label]$Label
+    )
+
+    Begin
+    {
+        Write-Verbose "$($MyInvocation.MyCommand.Name):: Function started"
+    }
+
+    Process
+    {
+        # Ensure ValueByPipeProperty is of a valid Type
+        Write-Debug "$($MyInvocation.MyCommand.Name):: Value from Pipe $(if ($_ -ne $null) { "is of Type $($_.getType())" } else { "was not provided" })"
+        if ($_ `
+            -and $PsCmdlet.ParameterSetName -in @('byString', 'byLabelObject', 'byLabelId') `
+            -and (!(
+                $_ -is [Confluence.PageSummary] `
+                -or $_ -is [Confluence.Page] `
+                -or $_ -is [Confluence.BlogEntrySummary] `
+                -or $_ -is [Confluence.BlogEntry] `
+                -or $_ -is [Confluence.Attachment] `
+                -or $_ -is [Confluence.ContentSummary] `
+            ))
+        )
+        {
+            Throw "Invalid object provided"
+        }
+
+        if ($PsCmdlet.ParameterSetName -in @('byString', 'byLabelObject', 'byLabelId') -and (!($Object.id)))
+        {
+            throw "Invalid object provided"
+        }
+
+        switch ($PsCmdlet.ParameterSetName)
+        {
+            "byString"
+            {
+                foreach ($labelAsString in $LabelName)
+                {
+                    Write-Verbose "$($MyInvocation.MyCommand.Name):: Adding Label $LabelName to $($Object.id)"
+                    if ($PSCmdlet.ShouldProcess("Object $($Object.id)","Add Label"))
+                    {
+                        Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.addLabelByName" -Params ($token, $labelAsString, $Object.id) -OutputType "bool"
+                    }
+                }
+            }
+            "byLabelObject"
+            {
+                Write-Verbose "$($MyInvocation.MyCommand.Name):: Adding Label $($Label.name) to $($Object.id)"
+                if ($PSCmdlet.ShouldProcess("Object $($Object.id)","Add Label"))
+                {
+                    Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.addLabelByObject" -Params ($token, $Label, $Object.id) -OutputType "bool"
+                }
+            }
+            "byLabelId"
+            {
+                Write-Verbose "$($MyInvocation.MyCommand.Name):: Adding Label $LabelId to $($Object.id)"
+                if ($PSCmdlet.ShouldProcess("Object $($Object.id)","Add Label"))
+                {
+                    Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.addLabelById" -Params ($token, $LabelId, $Object.id) -OutputType "bool"
+                }
+            }
+            "onSpace"
+            {
+                Write-Verbose "$($MyInvocation.MyCommand.Name):: Adding Label $LabelName to Space $SpaceKey"
+                if ($PSCmdlet.ShouldProcess("Space $SpaceKey","Add Label"))
+                {
+                    Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.addLabelByNameToSpace" -Params ($token, $LabelName, $SpaceKey) -OutputType "bool"
+                }
+            }
+        }
+    }
+
+    End
+        { Write-Verbose "$($MyInvocation.MyCommand.Name):: Function ended" }
+}
 <#function Remove-ConfluenceLabel {
     #boolean removeLabelByName(String token, String labelName, long objectId) - Removes the given label from the object with the given ContentEntityObject ID.
     #boolean removeLabelById(String token, long labelId, long objectId) - Removes the label with the given ID from the object with the given ContentEntityObject ID.
