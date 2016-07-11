@@ -605,14 +605,14 @@ function Move-ConfluencePage {
             "movePage" {
                 Write-Verbose "$($MyInvocation.MyCommand.Name):: Moving Page $SourcePageId to $position target page $TargetPageId"
                 if ($PSCmdlet.ShouldProcess($SourcePageId, "Moving")) {
-                    ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.movePage" -Params ($token,([string]$SourcePageId),([string]$TargetPageId),$position))
+                    Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.movePage" -Params ($token,([string]$SourcePageId),([string]$TargetPageId),$position) -OutputType "bool"
                 }
                 break
             }
             "movePageToTop" {
                 Write-Verbose "$($MyInvocation.MyCommand.Name):: Moving Page $SourcePageId to Top Level in Space $spacekey"
                 if ($PSCmdlet.ShouldProcess($SourcePageId, "Moving to Top Level")) {
-                    ConvertFrom-Xml (Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.movePageToTopLevel" -Params (([string]$SourcePageId),$SpaceKey))
+                    Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.movePageToTopLevel" -Params (([string]$SourcePageId),$SpaceKey) -OutputType "bool"
                 }
                 break
             }
