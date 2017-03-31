@@ -46,6 +46,7 @@ namespace Confluence
 		public string url;
 		public Int64 homePage;
 		public string description;
+		public string type;
 	}
 	/**
  	 * Confluence.PageSummary
