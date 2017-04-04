@@ -12,7 +12,7 @@
     RootModule = 'PsConfluence.psm1'
 
     # Version number of this module.
-    ModuleVersion = '1.1.2.0'
+    ModuleVersion = '1.1.2.1'
 
     # ID used to uniquely identify this module
     GUID = '4cc6a5d6-1f92-4cdf-8cb5-51b3a13e651a'

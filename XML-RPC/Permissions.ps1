@@ -324,7 +324,7 @@ function Add-ConfluenceSpacePermissions {
                 boolean addAnonymousPermissionsToSpace(String token, Vector permissions, String spaceKey) - Give anonymous users the permissions permissions on the space with the key spaceKey. (since 2.0)
     #>
     [CmdletBinding(
-        SupportsShouldProcess=$True
+        SupportsShouldProcess = $True
     )]
     [OutputType(
         [Boolean]
@@ -333,21 +333,21 @@ function Add-ConfluenceSpacePermissions {
         # The URi of the API interface.
         # Value can be set persistently with Set-ConfluenceEndpoint.
         [Parameter(
-            Mandatory=$true
+            Mandatory = $true
         )]
         [string]$apiURi,
 
         # Confluence's Authentication Token.
         # Value can be set persistently with Set-ConfluenceEndpoint.
         [Parameter(
-            Mandatory=$true
+            Mandatory = $true
         )]
         [string]$Token,
 
         # Key of the Space.
         [Parameter(
-            Position=0,
-            Mandatory=$true
+            Position = 0,
+            Mandatory = $true
         )]
         [Alias("space")]
         [string]$SpaceKey,
@@ -355,16 +355,16 @@ function Add-ConfluenceSpacePermissions {
         # Name of the Entity in question. Can be an User or Group.
         # If no User or Group is provided, the permissions will be assigned to anonymous users
         [Parameter(
-            Position=1,
-            ValueFromPipeline=$true
+            Position = 1,
+            ValueFromPipeline = $true
         )]
-        [Alias('UserName','GroupName')]
+        [Alias('UserName', 'GroupName')]
         [string]$RemoteEntityName,
 
         # Permission to be added.
         [Parameter(
-            Position=2,
-            Mandatory=$true
+            Position = 2,
+            Mandatory = $true
         )]
         [ValidateSet(
             'VIEWSPACE',
@@ -386,52 +386,41 @@ function Add-ConfluenceSpacePermissions {
     )
 
     Begin
-        { Write-Verbose "$($MyInvocation.MyCommand.Name):: Function started" }
+    { Write-Verbose "$($MyInvocation.MyCommand.Name):: Function started" }
 
-    Process
-    {
-        if ($Permissions.count -gt 1)
-        {
-            if ($RemoteEntityName)
-            {
+    Process {
+        if ($Permissions.count -gt 1) {
+            if ($RemoteEntityName) {
                 Write-Verbose "$($MyInvocation.MyCommand.Name):: Adding multiple Space permissions to $RemoteEntityName"
-                if ($PSCmdlet.ShouldProcess($RemoteEntityName, "Assign Permission $($Permissions -join ',')"))
-                {
-                    Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.addPermissionsToSpace" -Params ($token, $Permissions, $RemoteEntityName, $SpaceKey)
+                if ($PSCmdlet.ShouldProcess($RemoteEntityName, "Assign Permission $($Permissions -join ',')")) {
+                    Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.addPermissionToSpace" -Params ($token, $Permissions, $RemoteEntityName, $SpaceKey)
                 }
             }
-            else
-            {
+            else {
                 Write-Verbose "$($MyInvocation.MyCommand.Name):: Adding multiple Space permissions to anonymous users"
-                if ($PSCmdlet.ShouldProcess("anonymous users", "Assign Permission $($Permissions -join ',')"))
-                {
+                if ($PSCmdlet.ShouldProcess("anonymous users", "Assign Permission $($Permissions -join ',')")) {
                     Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.addAnonymousPermissionToSpace" -Params ($token, $Permissions, $SpaceKey)
                 }
             }
         }
-        elseif ($Permissions.count -eq 1)
-        {
-            if ($RemoteEntityName)
-            {
+        elseif ($Permissions.count -eq 1) {
+            if ($RemoteEntityName) {
                 Write-Verbose "$($MyInvocation.MyCommand.Name):: Adding a Space permission to $RemoteEntityName"
-                if ($PSCmdlet.ShouldProcess($RemoteEntityName, "Assign Permission $Permissions"))
-                {
-                    Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.addPermissionToSpace" -Params ($token, $Permissions, $RemoteEntityName, $SpaceKey)
+                if ($PSCmdlet.ShouldProcess($RemoteEntityName, "Assign Permission $Permissions")) {
+                    Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.addPermissionToSpace" -Params ($token, ([string]$Permissions), $RemoteEntityName, $SpaceKey)
                 }
             }
-            else
-            {
+            else {
                 Write-Verbose "$($MyInvocation.MyCommand.Name):: Adding a Space permission to anonymous users"
-                if ($PSCmdlet.ShouldProcess("anonymous users", "Assign Permission $Permissions"))
-                {
-                    Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.addAnonymousPermissionsToSpace" -Params ($token, $Permissions, $SpaceKey)
+                if ($PSCmdlet.ShouldProcess("anonymous users", "Assign Permission $Permissions")) {
+                    Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.addAnonymousPermissionsToSpace" -Params ($token, ([string]$Permissions), $SpaceKey)
                 }
             }
         }
     }
 
     End
-        { Write-Verbose "$($MyInvocation.MyCommand.Name):: Function ended" }
+    { Write-Verbose "$($MyInvocation.MyCommand.Name):: Function ended" }
 }
 function Remove-ConfluenceSpacePermissions {
     <#
