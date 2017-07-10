@@ -179,6 +179,7 @@ function Set-ConfluencePage {
             AUTHOR : Oliver Lipkau <oliver@lipkau.net>
             VERSION: 1.0.0 - OL - Initial Code
                      1.1.0 - OL - Replaced hashtables with Objects
+                     1.2.0 - OL - Fix output object
 
         .INPUTS
             string
@@ -288,7 +289,7 @@ function Set-ConfluencePage {
             Write-Verbose "$($MyInvocation.MyCommand.Name):: Updating Page $($Page.title)"
             if ($pscmdlet.ShouldProcess($page.title, "Update"))
             {
-                Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.updatePage" -Params ($token,$page,$updateOptions) -OutputType "bool"
+                Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.updatePage" -Params ($token,$page,$updateOptions) -OutputType "Confluence.Page"
             }
         }
         else
@@ -296,7 +297,7 @@ function Set-ConfluencePage {
             Write-Verbose "$($MyInvocation.MyCommand.Name):: Creating Page $($Page.title)"
             if ($pscmdlet.ShouldProcess($page.title, "Create"))
             {
-                Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.storePage" -Params ($token,$page) -OutputType "bool"
+                Invoke-ConfluenceCall -Url $apiURi -MethodName "confluence2.storePage" -Params ($token,$page) -OutputType "Confluence.Page"
             }
         }
     }
